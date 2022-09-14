@@ -1,0 +1,13 @@
+.App-wrapper {
+  height: 100vh;
+  
+  display: flex;
+  justify-content: center; /*Центрирование по горизонтали*/
+  align-items: center;     
+}
+
+.App{
+  height: 80vh;
+  width: 90vw;
+  border: 1px double black;
+}
