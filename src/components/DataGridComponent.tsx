@@ -1,11 +1,12 @@
-import * as React from 'react';
 import Box from '@mui/material/Box';
 import { DataGrid, GridColDef, GridValueGetterParams } from '@mui/x-data-grid';
-import TableSortLabel from '@mui/material/TableSortLabel';
 import { useState, useEffect } from 'react';
-import { utimes } from 'fs/promises';
 import TextField from '@mui/material/TextField';
 import Autocomplete from '@mui/material/Autocomplete'
+import { Button } from '@mui/material';
+import Stack from '@mui/system/Stack';
+import { Data, Records } from '../types';
+import { Dayjs } from 'dayjs';
 
 const columns: GridColDef[] = [
 
@@ -84,26 +85,36 @@ const fields:String[] = [
   "Количество смертей на 1000 жителей"
 ]
 
-export default function DataGridDemo(props:any) {
+interface Props{
+    data: Data[],
+    dateFrom: Dayjs | Date | undefined,
+    dateUpTo: Dayjs | Date | undefined,
+    getCountries: (records: Data[]) => void,
+}
 
-  const [records, setRecords] = useState([]);
-  const [filterCountry, setFilterCountry] = useState('');
-  const [filterField, setFilterField] = useState('');
-  const [filterFieldValueFrom, setFilterFieldValueFrom] = useState(0);
-  const [filterFieldValueTo, setFilterFieldValueTo] = useState(0);
+
+export default function DataGridComponent(props:Props) {
+
+  const [records, setRecords] = useState<Records[]>([]);
+  const [contries, setContries] = useState<string[]>([]);
+  const [filterCountry, setFilterCountry] = useState<string>('');
+  const [filterField, setFilterField] = useState<string>('');
+  const [filterFieldValueFrom, setFilterFieldValueFrom] = useState<number>(0);
+  const [filterFieldValueTo, setFilterFieldValueTo] = useState<number>(0);
+  const [pageSize, setPageSize] = useState<number>(7);
 
   useEffect(() =>{
     createRecords()
   }, [props , filterCountry, filterField, filterFieldValueFrom, filterFieldValueTo])
 
   const createRecords = () => {
-      let newRecords:any = [];
+      let newRecords:Records[] = [];
 
       for (let item of props.data){
 
-          const itemDate = new Date(item.year, item.month-1, item.day)
+          const itemDate = new Date(Number(item.year), Number(item.month)-1, Number(item.day))
 
-          if (!newRecords.length || !(item.countriesAndTerritories == newRecords.at(-1).countryName)){
+          if (!newRecords.length || !(item.countriesAndTerritories == newRecords.at(-1)!.countryName!)){
                 const newCountry = {
                     id: item.countriesAndTerritories,
                     countryName: item.countriesAndTerritories,
@@ -114,30 +125,30 @@ export default function DataGridDemo(props:any) {
                     cases1000: 0,
                     deaths1000: 0
                 }
-                if ((itemDate >= props.dateFrom) && (itemDate <= props.dateUpTo)){
+                if ((itemDate >= props.dateFrom!) && (itemDate <= props.dateUpTo!)){ 
                   newCountry.cases += item.cases;
                   newCountry.deaths += item.deaths;
                 }
 
                 newCountry.allcases += item.cases;
                 newCountry.alldeaths += item.deaths;
-                newCountry.cases1000 = (newCountry.allcases / item.popData2019) * 1000;
-                newCountry.deaths1000 = (newCountry.alldeaths / item.popData2019) * 1000;
+                newCountry.cases1000 = (newCountry.allcases / Number(item.popData2019)) * 1000;
+                newCountry.deaths1000 = (newCountry.alldeaths / Number(item.popData2019)) * 1000;
 
                 newRecords.push(newCountry);
           }
 
           else{
 
-              if ((itemDate >= props.dateFrom) && (itemDate <= props.dateUpTo)){
-                  newRecords.at(-1).cases += item.cases;
-                  newRecords.at(-1).deaths += item.deaths;
+              if ((itemDate >= props.dateFrom!) && (itemDate <= props.dateUpTo!)){
+                  newRecords.at(-1)!.cases += item.cases;
+                  newRecords.at(-1)!.deaths += item.deaths;
               }
 
-              newRecords.at(-1).allcases += item.cases;
-              newRecords.at(-1).alldeaths += item.deaths;
-              newRecords.at(-1).cases1000 = (newRecords.at(-1).allcases / item.popData2019) * 1000;
-              newRecords.at(-1).deaths1000 = (newRecords.at(-1).alldeaths / item.popData2019) * 1000;
+              newRecords.at(-1)!.allcases += item.cases;
+              newRecords.at(-1)!.alldeaths += item.deaths;
+              newRecords.at(-1)!.cases1000 = (newRecords.at(-1)!.allcases / Number(item.popData2019)) * 1000;
+              newRecords.at(-1)!.deaths1000 = (newRecords.at(-1)!.alldeaths / Number(item.popData2019)) * 1000;
           }
 
       }
@@ -182,26 +193,37 @@ export default function DataGridDemo(props:any) {
         }
       }
       
-
+      getCountries(newRecords)
       setRecords(newRecords);
 
   }
 
-  const getCountries = () =>{
-    const contries = records.map((country:any) => {
+  function getCountries  (newRecords:Records[])  {
+    const contries = newRecords.map((country:any) => {
         return country.countryName;
     })
-    return contries;
+    setContries(contries);
+  }
+
+  function changeFilterCountry(event: any, value: any){
+    setFilterCountry(value);
+
+  }
+
+  function resetFilters(){
+    setFilterCountry('');
+    setFilterField('');
+    setFilterFieldValueFrom(0);
+    setFilterFieldValueTo(0);
   }
 
   return (
-    <Box sx={{ height: 400, width: '100%' }}>
+    <Box sx={{ height: 540, width: '100%' }}>
       <Autocomplete
         disablePortal
-        defaultValue = {null}
-        id="combo-box-demo"
-        options={getCountries()}
-        onChange = {(event:any, value:string) => setFilterCountry(value)}
+        value={filterCountry}
+        options={contries}
+        onChange={changeFilterCountry}
         sx={{ width: 300,display : 'inline-flex' }}
         renderInput={(params) => <TextField {...params} label="Поиск страны..." />}
       />
@@ -210,39 +232,64 @@ export default function DataGridDemo(props:any) {
 
       <Autocomplete
         disablePortal
-        defaultValue = {null}
-        id="combo-box-demo"
+        value={filterField}
         options={fields}
-        onChange = {(event:any, value:any) => setFilterField(value)}
+        onChange={(event:any, value:any) => setFilterField(value)}
         sx={{ width: 300 ,display : 'inline-flex'}}
         renderInput={(params) => <TextField {...params} label="Фильтровать по полю..." />}
       />
 
       <Box sx={{ width:30, display: "inline-flex" }}></Box>
 
-      <TextField 
-         label="значение от" 
-         variant="outlined"
-         disabled={!filterField} 
-         onChange = {(event) => {setFilterFieldValueFrom(Number(event.target.value))}}
-         error = {isNaN(filterFieldValueFrom)}/>
+      <Box sx={{ width:500, display: "inline-flex" }}>
+          <TextField 
+            variant="outlined"
+            value={filterFieldValueFrom ? filterFieldValueFrom : (filterFieldValueFrom === 0 ? filterFieldValueFrom : null)}
+            disabled={!filterField} 
+            onChange={(event) => {setFilterFieldValueFrom(Number(event.target.value))}}
+            error={isNaN(filterFieldValueFrom)}/>
 
-      <Box sx={{ width:30, display: "inline-flex" }}></Box>
+          <Box sx={{ width:30, display: "inline-flex" }}></Box>
 
-      <TextField 
-         label="значение до" 
-         variant="outlined"
-         disabled={!filterField}
-         onChange = {(event) => {setFilterFieldValueTo(Number(event.target.value))}}
-         error = {isNaN(filterFieldValueTo)} />
+          <TextField  
+            variant="outlined"
+            value={filterFieldValueTo ? filterFieldValueTo : (filterFieldValueTo === 0 ? filterFieldValueTo : null)}
+            disabled={!filterField}
+            onChange={(event) => {setFilterFieldValueTo(Number(event.target.value))}}
+            error={isNaN(filterFieldValueTo)} />
+      </Box>
+
+      <Stack spacing={2} direction="row"  sx={{ml:110}}>
+
+          <Autocomplete
+            disablePortal
+            value={pageSize}
+            options={[1,2,3,4,5,6,7]}
+            onChange = {(event:any, value:any) => setPageSize(value)}
+            sx={{ width: 300}}
+            renderInput={(params) => <TextField {...params} label="Размер страницы" />}
+          />
+
+          <Button 
+              onClick={resetFilters}>
+            Сбросить фильтры</Button>
+
+      </Stack>
 
       <DataGrid
-        rows={records}
-        columns={columns}
-        pageSize={5}
-        rowsPerPageOptions={[5]}
-        disableSelectionOnClick
-        headerHeight={100}
+          rows={records}
+          columns={columns}
+          pageSize={pageSize}
+          rowsPerPageOptions={[pageSize]}
+          disableSelectionOnClick
+          headerHeight={100}
+          components={{
+            NoRowsOverlay: () => (
+              <Stack height="100%" alignItems="center" justifyContent="center">
+                Ничего не найдено
+              </Stack>
+            ),
+          }}
       />
     </Box>
   );
