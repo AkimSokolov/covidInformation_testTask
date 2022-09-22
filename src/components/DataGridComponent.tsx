@@ -97,8 +97,8 @@ export default function DataGridComponent(props:Props) {
 
   const [records, setRecords] = useState<Records[]>([]);
   const [contries, setContries] = useState<string[]>([]);
-  const [filterCountry, setFilterCountry] = useState<string>('');
-  const [filterField, setFilterField] = useState<string>('');
+  const [filterCountry, setFilterCountry] = useState<string>("");
+  const [filterField, setFilterField] = useState<string>("");
   const [filterFieldValueFrom, setFilterFieldValueFrom] = useState<number>(0);
   const [filterFieldValueTo, setFilterFieldValueTo] = useState<number>(0);
   const [pageSize, setPageSize] = useState<number>(7);
@@ -218,11 +218,11 @@ export default function DataGridComponent(props:Props) {
   }
 
   return (
-    <Box sx={{ height: 540, width: '100%' }}>
+    <Box sx={{ height: 520, width: '100%' }}>
       <Autocomplete
         disablePortal
         value={filterCountry}
-        options={contries}
+        options={["", ...contries]}
         onChange={changeFilterCountry}
         sx={{ width: 300,display : 'inline-flex' }}
         renderInput={(params) => <TextField {...params} label="Поиск страны..." />}
@@ -233,7 +233,7 @@ export default function DataGridComponent(props:Props) {
       <Autocomplete
         disablePortal
         value={filterField}
-        options={fields}
+        options={["", ...fields]}
         onChange={(event:any, value:any) => setFilterField(value)}
         sx={{ width: 300 ,display : 'inline-flex'}}
         renderInput={(params) => <TextField {...params} label="Фильтровать по полю..." />}
@@ -259,12 +259,13 @@ export default function DataGridComponent(props:Props) {
             error={isNaN(filterFieldValueTo)} />
       </Box>
 
-      <Stack spacing={2} direction="row"  sx={{ml:110}}>
 
+      <Stack spacing={3} direction="row"  sx={{}}>
+          <Box sx={{ width:850}}></Box>
           <Autocomplete
             disablePortal
-            value={pageSize}
-            options={[1,2,3,4,5,6,7]}
+            value={pageSize.toString()}
+            options={[1,2,3,4,5,6,7].map((item) => {return(item.toString())})}
             onChange = {(event:any, value:any) => setPageSize(value)}
             sx={{ width: 300}}
             renderInput={(params) => <TextField {...params} label="Размер страницы" />}
